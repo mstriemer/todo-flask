@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 app = Flask(__name__)
 
 class TodoRepository(object):
@@ -31,12 +31,12 @@ todo_repository = TodoRepository()
 todo_repository.save(Todo("Learn Flask"))
 todo_repository.save(Todo("Make an API"))
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     todos = [todo.as_dict() for todo in todo_repository.all()]
     return jsonify(todos=todos)
 
-@app.route('/<id>/')
+@app.route('/<id>/', methods=['GET'])
 def show(id):
     id = int(id)
     todo = todo_repository.find(id)
@@ -44,6 +44,16 @@ def show(id):
         return "Not Found", 404
     else:
         return jsonify(todo.as_dict())
+
+@app.route('/', methods=['POST'])
+def create():
+    name = request.form.get('name', '')
+    if not name:
+        return "name is required", 322
+    else:
+        todo = Todo(name)
+        todo_repository.save(todo)
+        return jsonify(todo.as_dict()), 201
 
 if __name__ == '__main__':
     app.run()
