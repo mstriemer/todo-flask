@@ -6,7 +6,7 @@ class TodoRepository(object):
         self.todos = []
 
     def all(self):
-        return self.todos
+        return filter(lambda t: t is not None, self.todos)
 
     def save(self, todo):
         todo.id = len(self.todos) + 1
@@ -18,6 +18,13 @@ class TodoRepository(object):
         else:
             todo = None
         return todo
+
+    def remove(self, todo):
+        index = todo.id - 1
+        if self.todos[index] == todo:
+            self.todos[index] = None
+        else:
+            raise ArgumentError("invalid todo")
 
 class Todo(object):
     def __init__(self, name):
@@ -45,6 +52,16 @@ def show(id):
     else:
         return jsonify(todo.as_dict())
 
+@app.route('/<id>/', methods=['DELETE'])
+def destroy(id):
+    id = int(id)
+    todo = todo_repository.find(id)
+    if todo is None:
+        return "Not Found", 404
+    else:
+        todo_repository.remove(todo)
+        return '', 204
+
 @app.route('/', methods=['POST'])
 def create():
     name = request.form.get('name', '')
@@ -56,4 +73,4 @@ def create():
         return jsonify(todo.as_dict()), 201
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
